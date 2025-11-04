@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poyo Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-container.hidden {
+            display: none;
+        }
+        .logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        .login-container h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .login-container p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .password-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        .password-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        .success-message {
+            color: #27ae60;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-container.hidden {
+            display: none;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .chat-header h1 {
+            font-size: 24px;
+        }
+        .user-info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .logout-btn, .clear-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover, .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f8f9fa;
+        }
+        .message {
+            display: flex;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .message.user {
+            justify-content: flex-end;
+        }
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        .message.assistant .message-content {
+            background: #e8e8ff;
+            color: #333;
+        }
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            background: white;
+        }
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            resize: none;
+            max-height: 100px;
+        }
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #999;
+        }
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            padding: 10px;
+        }
+        .status.online {
+            color: #27ae60;
+        }
+        .status.offline {
+            color: #e74c3c;
+        }
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+            .message-content {
+                max-width: 85%;
+            }
+            .login-container {
+                padding: 30px 20px;
+            }
+            .chat-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-buttons {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <div class="login-container" id="loginContainer">
+        <div class="logo">🐭</div>
+        <h1>Poyo Chat</h1>
+        <p>Введіть пароль для входу</p>
+        <input 
+            type="password" 
+            class="password-input" 
+            id="passwordInput" 
+            placeholder="Пароль"
+            onkeypress="if(event.key==='Enter') login()"
+        >
+        <button class="login-btn" onclick="login()">Увійти</button>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="status" id="connectionStatus"></div>
+    </div>
+    <!-- Chat Section -->
+    <div class="chat-container hidden" id="chatContainer">
+        <div class="chat-header">
+            <div>
+                <h1>🐭 Poyo Chat</h1>
+                <div class="user-info">ID: <span id="userIdDisplay"></span></div>
+            </div>
+            <div class="header-buttons">
+                <button class="clear-btn" onclick="refreshChat()" title="Перевірити нові повідомлення">🔄 Оновити</button>
+                <button class="clear-btn" onclick="clearChat()" title="Видалити всю історію чату">🗑️ Видалити</button>
+                <button class="logout-btn" onclick="logout()">🚪 Вихід</button>
+            </div>
+        </div>
+        <div class="messages" id="messagesContainer"></div>
+        <div class="status" id="chatStatus">🟢 Онлайн</div>
+        <div class="input-area">
+            <textarea 
+                class="message-input" 
+                id="messageInput" 
+                placeholder="Напишіть повідомлення... (Shift+Enter для нового рядка)"
+                onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">Відправити</button>
+        </div>
+    </div>
+    <script>
+        // Оновіть це на вашу локальну IP-адресу
+        const API_URL = "http://192.168.137.51:5000/api";
+        console.log("🌐 Connecting to API at:", API_URL);
+        let currentPassword = null;
+        let currentUserId = null;
+        let currentMessages = [];
+        // ===================== ВХІД =====================
+        async function login() {
+            const password = document.getElementById('passwordInput').value;
+            const errorMsg = document.getElementById('errorMessage');
+            if (!password) {
+                errorMsg.textContent = '❌ Будь ласка, введіть пароль';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    errorMsg.textContent = '❌ Невірний пароль';
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+                currentPassword = password;
+                currentUserId = data.user_id;
+                errorMsg.style.display = 'none';
+                showChat();
+                loadChatHistory();
+            } catch (error) {
+                errorMsg.textContent = '❌ Помилка підключення до сервера';
+                errorMsg.style.display = 'block';
+                console.error(error);
+            }
+        }
+        // ===================== ВИХІД =====================
+        function logout() {
+            if (confirm('Ви впевнені що хочете вийти?')) {
+                currentPassword = null;
+                currentUserId = null;
+                currentMessages = [];
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('loginContainer').classList.remove('hidden');
+                document.getElementById('chatContainer').classList.add('hidden');
+                document.getElementById('messagesContainer').innerHTML = '';
+            }
+        }
+        // ===================== РУЧНЕ ОНОВЛЕННЯ =====================
+        async function refreshChat() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Завантаження...';
+            await loadChatHistory();
+            btn.disabled = false;
+            btn.textContent = '🔄 Оновити';
+        }
+        // ===================== ВИДАЛЕННЯ ЧАТУ =====================
+        async function clearChat() {
+            if (!confirm('Ви впевнені що хочете видалити ВСЮ історію чату? Це не можна відмінити!')) {
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/chat/clear`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: currentPassword })
+                });
+                if (response.ok) {
+                    currentMessages = [];
+                    renderMessages();
+                    alert('✅ Чат видалено');
+                } else {
+                    alert('❌ Помилка при видаленні чату');
+                }
+            } catch (error) {
+                alert('❌ Помилка підключення');
+                console.error(error);
+            }
+        }
+        // ===================== ВІДОБРАЖЕННЯ ІНТЕРФЕЙСУ =====================
+        function showChat() {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('chatContainer').classList.remove('hidden');
+            document.getElementById('userIdDisplay').textContent = currentUserId;
+        }
+        // ===================== ЗАВАНТАЖЕННЯ ЧАТУ =====================
+        async function loadChatHistory() {
+            try {
+                const response = await fetch(`${API_URL}/chat/history`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: currentPassword })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    currentMessages = data.messages || [];
+                    updateStatus('online');
+                } else {
+                    currentMessages = [];
+                    updateStatus('offline');
+                }
+                renderMessages();
+                document.getElementById('messageInput').focus();
+            } catch (error) {
+                console.error('Помилка завантаження:', error);
+                currentMessages = [];
+                renderMessages();
+                updateStatus('offline');
+            }
+        }
+        // ===================== РЕНДЕРИНГ ПОВІДОМЛЕНЬ =====================
+        function renderMessages() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            currentMessages.forEach((msg, index) => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.role}`;
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                // Обробляємо markdown простенько
+                let content = msg.content;
+                content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                content = content.replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 3px;">$1</code>');
+                contentDiv.innerHTML = content;
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                // Витягуємо час з повідомлення
+                const timeMatch = msg.content.match(/\[(.*?)\]/);
+                if (timeMatch) {
+                    timeDiv.textContent = timeMatch[1];
+                }
+                messageDiv.appendChild(contentDiv);
+                if (timeDiv.textContent) {
+                    messageDiv.appendChild(timeDiv);
+                }
+                container.appendChild(messageDiv);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+        // ===================== ВІДПРАВКА ПОВІДОМЛЕННЯ =====================
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Додаємо повідомлення користувача до інтерфейсу одразу
+            const userMessageObj = {
+                role: "user",
+                content: `[${new Date().toLocaleString('uk-UA')}] ${message}`
+            };
+            currentMessages.push(userMessageObj);
+            input.value = '';
+            renderMessages(); // Оновлюємо відображення
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '⏳ Обробка...';
+
+            try {
+                // Відправляємо на сервер
+                const sendResponse = await fetch(`${API_URL}/chat/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        message: message
+                    })
+                });
+
+                if (!sendResponse.ok) {
+                    throw new Error('Failed to send message or get response');
+                }
+
+                const data = await sendResponse.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Server error');
+                }
+
+                updateStatus('online');
+
+                // Додаємо відповідь, яку сервер повернув у data.ai_response
+                const aiMessageObj = {
+                    role: "assistant",
+                    content: `[${new Date().toLocaleString('uk-UA')}] ${data.ai_response}`
+                };
+                currentMessages.push(aiMessageObj);
+
+                // Оновлюємо інтерфейс з новим повідомленням асистента
+                renderMessages();
+
+            } catch (error) {
+                console.error('Помилка:', error);
+                // Додаємо помилку як повідомлення асистента
+                currentMessages.push({
+                    role: "assistant",
+                    content: `[${new Date().toLocaleString('uk-UA')}] 🐭 Вибачте, сталася помилка: ${error.message || 'Не вдалося обробити запит'}.`
+                });
+                renderMessages();
+                updateStatus('offline');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Відправити';
+                document.getElementById('messageInput').focus();
+            }
+        }
+        // ===================== СТАТУС =====================
+        function updateStatus(status) {
+            const chatStatus = document.getElementById('chatStatus');
+            if (status === 'online') {
+                chatStatus.textContent = '🟢 Онлайн';
+                chatStatus.className = 'status online';
+            } else {
+                chatStatus.textContent = '🔴 Оффлайн';
+                chatStatus.className = 'status offline';
+            }
+        }
+        // ===================== ІНІЦІАЛІЗАЦІЯ =====================
+        window.addEventListener('load', () => {
+            document.getElementById('passwordInput').focus();
+            // Перевіряємо з'єднання при завантаженні
+            fetch(`${API_URL.replace('/api', '')}/api/health`)
+                .then(r => {
+                    if (r.ok) {
+                        document.getElementById('connectionStatus').textContent = '✅ Сервер онлайн';
+                        document.getElementById('connectionStatus').style.color = '#27ae60';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('connectionStatus').textContent = '❌ Сервер недоступний';
+                    document.getElementById('connectionStatus').style.color = '#e74c3c';
+                });
+        });
+    </script>
+</body>
+</html>
